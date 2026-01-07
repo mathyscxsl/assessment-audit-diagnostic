@@ -313,13 +313,11 @@ GET /tasks
 
 ---
 
-## Prochaines Étapes (Phase 3 & 4)
+## Phase 3 : Analyse Approfondie
 
-### Phase 3 : Analyse Approfondie
+### 3.1 Analyse du Code Backend
 
-#### 3.1 Analyse du Code Backend
-
-##### Problème #1 : Sleep Artificiel dans AuthService
+#### Problème #1 : Sleep Artificiel dans AuthService
 
 **Fichier** : `backend/src/services/AuthService.ts:8`
 
@@ -333,8 +331,8 @@ await new Promise((resolve) => setTimeout(resolve, 1500));
 - Cause directe du p95/p99 > 1500ms observé dans Grafana
 
 **Solution** :
+- Supprimer cette ligne
 ```typescript
-// SUPPRIMER cette ligne
 // await new Promise((resolve) => setTimeout(resolve, 1500));
 ```
 
@@ -371,7 +369,7 @@ async findAll(filters?: TaskFilters, limit = 50, offset = 0): Promise<{tasks: Ta
   
   // Requête SELECT avec LIMIT/OFFSET
   let query = "SELECT * FROM tasks WHERE 1=1";
-  // ... ajouter filtres
+  // ajouter filtres
   query += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
   
   const countResult = await pool.query(countQuery, countParams);
@@ -512,34 +510,7 @@ res.on("finish", () => {  // Pas async !
 
 ---
 
-##### Problème Moyen #6 : Pool PostgreSQL Sous-dimensionné
-
-**Fichier** : `backend/src/config/database.ts:7-11`
-
-```typescript
-const pool = new Pool({
-  max: 20,                    // Trop bas pour 50 conn simultanées
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
-```
-
-**Impact** : Avec tests autocannon (50 conn), dépassement du pool → queuing → latence
-
-**Solution** :
-```typescript
-const pool = new Pool({
-  max: 50,                     // Augmenter pour charge élevée
-  min: 5,                      // Pool minimum toujours chaud
-  idleTimeoutMillis: 60000,    // 1 minute
-  connectionTimeoutMillis: 5000, // 5 secondes
-  allowExitOnIdle: false,
-});
-```
-
----
-
-##### Problème Moyen #7 : N+1 Queries sur Timer Operations
+##### Problème Moyen #6 : N+1 Queries sur Timer Operations
 
 **Fichier** : `backend/src/services/TaskService.ts:20-46`
 
@@ -554,21 +525,6 @@ async startTaskTimer(id: number) {
 **Impact** : 2 requêtes au lieu d'1, double round-trip DB
 
 **Solution** : Fusionner validation et UPDATE dans une seule requête avec clause WHERE conditionnelle
-
----
-
-##### Problème Moyen #8 : Pas de Compression HTTP
-
-**Impact** : Payloads JSON volumineux (GET `/tasks` = 2.2 MB) non compressés
-
-**Solution** :
-```typescript
-import compression from "compression";
-
-app.use(compression({
-  level: 6  // Balance compression/CPU
-}));
-```
 
 **Gain attendu** : Réduction taille payload de 60-80%
 
