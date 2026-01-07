@@ -613,9 +613,5 @@ app.use(compression({
 
 ---
 
-### Phase 4 : Optimisation
-
----
-
 **Rapport réalisé le 7 janvier 2026**  
 *Outils utilisés : Lighthouse, Chrome DevTools, PostgreSQL EXPLAIN ANALYZE, Autocannon, Grafana*
