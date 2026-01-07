@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import authService from "../services/AuthService";
+import logger from "../config/logger";
 
 export class AuthController {
   async login(req: Request, res: Response) {
@@ -20,7 +21,8 @@ export class AuthController {
 
       res.json(result);
     } catch (error) {
-      console.error("Login error:", error);
+      res.locals.errorMessage = (error as any)?.message ?? undefined;
+      logger.error({ err: error }, "Login error");
       res.status(500).json({ error: "Internal server error" });
     }
   }

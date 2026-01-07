@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-  # Base de données PostgreSQL
   postgres:
     image: postgres:16-alpine
     container_name: taskwatch-postgres
@@ -20,12 +19,11 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend API
   backend:
     build: ./backend
     container_name: taskwatch-backend
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       PORT: 3000
       DB_HOST: postgres
       DB_PORT: 5432
@@ -42,7 +40,6 @@ services:
       - /app/node_modules
     command: npm run dev
 
-  # Frontend SPA
   frontend:
     build: ./frontend
     container_name: taskwatch-frontend
@@ -53,5 +50,20 @@ services:
     environment:
       VITE_API_URL: http://localhost:3000
 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: taskwatch-grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - postgres
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  grafana-storage:

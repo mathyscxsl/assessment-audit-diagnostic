@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import taskService from "../services/TaskService";
 import { TaskStatus } from "../models/Task";
+import logger from "../config/logger";
 
 export class TaskController {
   async getTasks(req: Request, res: Response) {
@@ -20,7 +21,8 @@ export class TaskController {
       const tasks = await taskService.getTasks(filters);
       res.json(tasks);
     } catch (error) {
-      console.error("Get tasks error:", error);
+      res.locals.errorMessage = (error as any)?.message ?? undefined;
+      logger.error({ err: error }, "Get tasks error");
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -53,7 +55,8 @@ export class TaskController {
 
       res.status(201).json(task);
     } catch (error) {
-      console.error("Create task error:", error);
+      res.locals.errorMessage = (error as any)?.message ?? undefined;
+      logger.error({ err: error }, "Create task error");
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -80,7 +83,8 @@ export class TaskController {
 
       res.json(task);
     } catch (error) {
-      console.error("Update task status error:", error);
+      res.locals.errorMessage = (error as any)?.message ?? undefined;
+      logger.error({ err: error }, "Update task status error");
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -91,7 +95,8 @@ export class TaskController {
       const task = await taskService.startTaskTimer(parseInt(id));
       res.json(task);
     } catch (error: any) {
-      console.error("Start timer error:", error);
+      res.locals.errorMessage = error?.message ?? undefined;
+      logger.error({ err: error }, "Start timer error");
       if (error.message === "Task not found") {
         return res.status(404).json({ error: error.message });
       }
@@ -108,7 +113,8 @@ export class TaskController {
       const task = await taskService.stopTaskTimer(parseInt(id));
       res.json(task);
     } catch (error: any) {
-      console.error("Stop timer error:", error);
+      res.locals.errorMessage = error?.message ?? undefined;
+      logger.error({ err: error }, "Stop timer error");
       if (error.message === "Task not found") {
         return res.status(404).json({ error: error.message });
       }
