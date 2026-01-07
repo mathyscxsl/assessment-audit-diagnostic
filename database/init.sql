@@ -42,3 +42,14 @@ CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
 INSERT INTO users (email, password, name) VALUES 
     ('test@example.com', '$2b$10$K7YCkWX3H5x8rQ5YCkWX3eZGQxKvVxKvVxKvVxKvVxKvVxKvVxKvVu', 'Utilisateur Test')
 ON CONFLICT (email) DO NOTHING;
+
+-- Table de logs des requêtes HTTP
+CREATE TABLE IF NOT EXISTS request_logs (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT NOW(),
+    route TEXT,
+    method TEXT,
+    status_code INTEGER,
+    duration_ms INTEGER,
+    error_message TEXT
+);
